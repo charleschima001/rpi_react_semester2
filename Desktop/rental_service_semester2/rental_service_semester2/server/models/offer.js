@@ -87,7 +87,6 @@ Offer.init({
     tableName: 'offers'
 });
 
-// Связь с пользователем
 Offer.belongsTo(User, { as: 'author', foreignKey: 'authorId' });
 
 export { Offer }; 

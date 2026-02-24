@@ -4,6 +4,7 @@ import { User } from './user.js';
 import { Offer } from './offer.js';  
 
 class Review extends Model {}
+
 Review.init({
     text: {
         type: DataTypes.STRING,
@@ -23,10 +24,21 @@ Review.init({
 }, {
     sequelize,
     modelName: 'Review',
-    tableName: 'reviews'
+    tableName: 'reviews',
+    timestamps: false, 
+    underscored: false
 });
-// Связи
-Review.belongsTo(User, { as: 'author', foreignKey: { allowNull: false } });
-Review.belongsTo(Offer, { foreignKey: { allowNull: false } });
+
+
+Review.belongsTo(User, { 
+    as: 'author', 
+    foreignKey: 'authorId',  
+    onDelete: 'SET NULL'
+});
+
+Review.belongsTo(Offer, { 
+    foreignKey: 'offerId',   
+    onDelete: 'CASCADE'
+});
 
 export { Review };

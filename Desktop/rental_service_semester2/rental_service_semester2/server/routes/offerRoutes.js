@@ -3,13 +3,20 @@ import upload from '../middleware/upload.js';
 import { 
     getAllOffers, 
     getFullOffer, 
-    createOffer 
+    createOffer,
+    getFavoriteOffers,
+    toggleFavorite
 } from '../controllers/offerController.js';
 
 const router = express.Router();
 
 router.get('/', getAllOffers);
-router.get('/:id', getFullOffer);
+
+router.get('/favorite', getFavoriteOffers); 
+router.post('/favorite/:offerId/:status', toggleFavorite); 
+
+router.get('/:id', getFullOffer); 
+
 router.post('/', upload.fields([
     { name: 'previewImage', maxCount: 1 },
     { name: 'photos', maxCount: 6 }

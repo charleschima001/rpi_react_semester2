@@ -22,7 +22,7 @@ export async function getFullOffer(req, res, next) {
         });
 
         if (!offer) {
-            return next(ApiError.badRequest('Offer not found'));
+            return next(ApiError.badRequest('Предложение не найдено'));
         }
 
         const fullOffer = adaptFullOfferToClient(offer);
@@ -60,31 +60,66 @@ export async function createOffer(req, res, next) {
             }
         }
 
-        // Add type conversions and defaults
         const offer = await Offer.create({
             title,
             description,
-            publishDate: publishDate || new Date(),
+            publishDate,
             city,
             previewImage: previewImagePath,
             photos: processedPhotos,
-            isPremium: isPremium === 'true' || isPremium === true,
-            isFavorite: isFavorite === 'true' || isFavorite === true,
-            rating: parseFloat(rating) || 0,
+            isPremium,
+            isFavorite,
+            rating,
             type,
-            rooms: parseInt(rooms) || 1,
-            guests: parseInt(guests) || 1,
-            price: parseInt(price) || 0,
+            rooms,
+            guests,
+            price,
             features: parsedFeatures,
-            commentsCount: parseInt(commentsCount) || 0,
-            latitude: parseFloat(latitude) || 0,
-            longitude: parseFloat(longitude) || 0,
+            commentsCount,
+            latitude,
+            longitude,
             authorId: userId
         });
 
         return res.status(201).json(offer);
     } catch (error) {
-        console.error('Create offer error:', error);
         next(ApiError.internal('Не удалось добавить предложение: ' + error.message));
     }
 }
+
+export const toggleFavorite = async (req, res, next) => {
+  try {
+    const { offerId, status } = req.params;
+
+    const offer = await Offer.findByPk(offerId);
+    
+    if (!offer) {
+      return next(ApiError.badRequest('Предложение не найдено'));
+    }
+    const newStatus = status === '1' || status === 'true';
+
+    await offer.update({ isFavorite: newStatus });
+
+    res.json({ 
+      message: `Предложение ${newStatus ? 'добавлено в' : 'удалено из'} избранного`,
+      isFavorite: newStatus 
+    });
+  } catch (error) {
+    console.error('Ошибка при переключении избранного:', error);
+    next(ApiError.internal('Ошибка при обновлении статуса избранного'));
+  }
+};
+
+export const getFavoriteOffers = async (req, res, next) => {
+  try {
+    const favoriteOffers = await Offer.findAll({
+      where: { isFavorite: true }
+    });
+    
+    const adaptedOffers = favoriteOffers.map(adaptOfferToClient);
+    res.json(adaptedOffers);
+  } catch (error) {
+    console.error('Ошибка при получении избранных предложений:', error);
+    next(ApiError.internal('Не удалось получить избранные предложения'));
+  }
+};
