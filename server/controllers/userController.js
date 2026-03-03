@@ -7,10 +7,14 @@ import { Op } from 'sequelize';
 export const registration = async (req, res, next) => {
   try {
     const { email, password, userType, username } = req.body;
+    
 
-   
     if (!email || !password) {
       return next(ApiError.badRequest('Email and password are required'));
+    }
+
+    if (password.length < 6 || password.length > 12) {
+        return next(ApiError.badRequest('Password must be between 6 and 12 characters'));
     }
 
     const candidate = await User.findOne({ where: { email } });
