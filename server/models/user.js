@@ -8,7 +8,7 @@ User.init({
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-            len: [1, 15]
+            len: [1, 15] 
         }
     },
     email: {
@@ -22,6 +22,9 @@ User.init({
     password: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+            len: [6, 12] 
+        }
     },
     userType: {
         type: DataTypes.ENUM,
