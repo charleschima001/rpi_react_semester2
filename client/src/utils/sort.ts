@@ -21,3 +21,8 @@ export const sortOffers = (offers: Offer[], sortType: SortType): Offer[] => {
       return sortedOffers; 
   }
 };
+// Add this to src/utils/sort.ts
+export const getOffersByCity = (cityName: string, offers: Offer[]): Offer[] => {
+  if (!cityName) return [];
+  return offers.filter((offer) => offer.city.name === cityName);
+};

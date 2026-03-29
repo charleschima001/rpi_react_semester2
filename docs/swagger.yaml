@@ -1,0 +1,582 @@
+openapi: 3.0.0
+info:
+  title: Housing Rental API
+  version: 1.0.0
+  description: API для работы с предложениями, отзывами и пользователями
+servers:
+  - url: http://localhost:5000
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    OfferPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        price:
+          type: number
+        city:
+          type: object
+          properties:
+            name:
+              type: string
+            location:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                zoom:
+                  type: integer
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+            longitude:
+              type: number
+        isFavorite:
+          type: boolean
+        isPremium:
+          type: boolean
+        rating:
+          type: number
+        previewImage:
+          type: string
+    OfferFull:
+      allOf:
+        - $ref: '#/components/schemas/OfferPreview'
+        - type: object
+          properties:
+            description:
+              type: string
+            bedrooms:
+              type: integer
+            goods:
+              type: array
+              items:
+                type: string
+            host:
+              type: object
+              properties:
+                name:
+                  type: string
+                avatarUrl:
+                  type: string
+                isPro:
+                  type: boolean
+            images:
+              type: array
+              items:
+                type: string
+            maxAdults:
+              type: integer
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        comment:
+          type: string
+        rating:
+          type: number
+        date:
+          type: string
+          format: date-time
+        user:
+          type: object
+          properties:
+            name:
+              type: string
+            avatarUrl:
+              type: string
+            isPro:
+              type: boolean
+tags:
+  - name: Users
+  - name: Offers
+  - name: Reviews
+paths:
+  /login:
+    post:
+      summary: Авторизация пользователя
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: Успешный логин, возвращает токен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      username:
+                        type: string
+                      avatar:
+                        type: string
+                      isPro:
+                        type: boolean
+        '400':
+          description: Неверный email или пароль
+        '401':
+          description: Не авторизован
+  /offer:
+    post:
+      summary: Создание нового предложения
+      description: |
+        Создает новое предложение (offer).
+        Принимает данные в формате multipart/form-data.
+        Поле previewImage обязательно.
+        Поле photos --- массив из 6 файлов.
+      tags: [Offers]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - city
+                - price
+                - rooms
+                - guests
+                - previewImage
+              properties:
+                title:
+                  type: string
+                  example: "Cozy apartment in Paris"
+                description:
+                  type: string
+                  example: "Beautiful apartment near Eiffel Tower"
+                publishDate:
+                  type: string
+                  format: date
+                  example: "2024-03-06"
+                city:
+                  type: string
+                  enum: [Paris, Cologne, Brussels, Amsterdam, Hamburg, Dusseldorf]
+                  example: "Paris"
+                isPremium:
+                  type: boolean
+                  example: true
+                isFavorite:
+                  type: boolean
+                  example: false
+                rating:
+                  type: number
+                  minimum: 1
+                  maximum: 5
+                  example: 4.7
+                type:
+                  type: string
+                  enum: [apartment, house, room, hotel]
+                  example: "apartment"
+                rooms:
+                  type: integer
+                  minimum: 1
+                  maximum: 8
+                  example: 2
+                guests:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  example: 4
+                price:
+                  type: number
+                  minimum: 100
+                  maximum: 100000
+                  example: 200
+                features:
+                  type: string
+                  description: JSON-строка массива из значений 'Breakfast', 'Air conditioning', 'Laptop friendly workspace', 'Baby seat', 'Washer', 'Towels', 'Fridge'
+                  example: "[\"Breakfast\",\"WiFi\",\"Towels\"]"
+                commentsCount:
+                  type: integer
+                  example: 0
+                latitude:
+                  type: number
+                  example: 48.8566
+                longitude:
+                  type: number
+                  example: 2.3522
+                userId:
+                  type: integer
+                  example: 1
+                previewImage:
+                  type: string
+                  format: binary
+                  description: Основное изображение (обязательно)
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Дополнительные изображения (до 6 фото)
+      responses:
+        '201':
+          description: Предложение успешно создано
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+                  price:
+                    type: number
+                  city:
+                    type: object
+                  author:
+                    type: object
+        '400':
+          description: Ошибка валидации данных
+        '401':
+          description: Не авторизован
+  /offers:
+    get:
+      summary: Получение списка всех предложений
+      tags: [Offers]
+      responses:
+        '200':
+          description: Список предложений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OfferPreview'
+        '500':
+          description: Ошибка сервера
+  /offers/{id}:
+    get:
+      summary: Получение детальной информации о предложении
+      tags: [Offers]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID предложения
+      responses:
+        '200':
+          description: Детальная информация о предложении
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferFull'
+        '400':
+          description: Предложение не найдено
+        '404':
+          description: Предложение не найдено
+  /register:
+    post:
+      summary: Регистрация нового пользователя
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - username
+                - userType
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "newuser@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  maxLength: 12
+                  example: "password123"
+                username:
+                  type: string
+                  minLength: 1
+                  maxLength: 15
+                  example: "john_doe"
+                userType:
+                  type: string
+                  enum: [normal, pro]
+                  example: "normal"
+                avatar:
+                  type: string
+                  format: binary
+                  description: Аватар пользователя (необязательно)
+      responses:
+        '200':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      username:
+                        type: string
+                      avatarUrl:
+                        type: string
+                      isPro:
+                        type: boolean
+        '400':
+          description: Ошибка валидации или email уже существует
+  /favorite:
+    get:
+      summary: Получение списка избранных предложений
+      tags: [Offers]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список избранных предложений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OfferPreview'
+        '401':
+          description: Не авторизован
+  /favorite/{offerId}/{status}:
+    post:
+      summary: Добавить/удалить предложение в/из избранного
+      tags: [Offers]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID предложения
+        - name: status
+          in: path
+          required: true
+          schema:
+            type: integer
+            enum: [0, 1]
+          description: 1 - добавить, 0 - удалить
+      responses:
+        '200':
+          description: Статус избранного обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfferPreview'
+        '401':
+          description: Не авторизован
+        '404':
+          description: Предложение не найдено
+  /comments/{offerId}:
+    get:
+      summary: Получение списка комментариев для предложения
+      tags: [Reviews]
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID предложения
+      responses:
+        '200':
+          description: Список комментариев
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+        '404':
+          description: Предложение не найдено
+    post:
+      summary: Добавление комментария к предложению
+      tags: [Reviews]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: offerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID предложения
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - comment
+                - rating
+              properties:
+                comment:
+                  type: string
+                  minLength: 5
+                  maxLength: 1024
+                  example: "Great apartment! Very clean and comfortable."
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 5
+      responses:
+        '201':
+          description: Комментарий успешно добавлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '400':
+          description: Ошибка валидации
+        '401':
+          description: Не авторизован
+        '404':
+          description: Предложение не найдено
+  /logout:
+    delete:
+      summary: Выход пользователя из системы
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Successfully logged out"
+        '401':
+          description: Не авторизован
+  /login:
+    get:
+      summary: Проверка статуса аутентификации
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Пользователь авторизован
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  email:
+                    type: string
+                  username:
+                    type: string
+                  avatar:
+                    type: string
+                  isPro:
+                    type: boolean
+                  token:
+                    type: string
+        '401':
+          description: Не авторизован
+  /user/profile:
+    put:
+      summary: Обновление профиля пользователя
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "updated@example.com"
+                avatar:
+                  type: string
+                  format: binary
+                  description: Новый аватар (необязательно)
+      responses:
+        '200':
+          description: Профиль успешно обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      username:
+                        type: string
+                      avatar:
+                        type: string
+                      isPro:
+                        type: boolean
+        '400':
+          description: Ошибка валидации
+        '401':
+          description: Не авторизован
+        '404':
+          description: Пользователь не найден

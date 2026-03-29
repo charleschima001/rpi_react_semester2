@@ -4,7 +4,6 @@ cat > .gitignore << 'EOF'
 node_modules/
 /.pnp
 .pnp.js
-package-lock.json
 yarn.lock
 
 # Build outputs
@@ -51,7 +50,7 @@ server/static/*.jpeg
 server/static/*.JPG
 !.gitkeep
 
-# Ignore personal folders
+# Ignore personal folders (these paths are correct for your structure)
 ../../../Desktop/
 ../../../Documents/
 ../../../Downloads/
@@ -60,6 +59,6 @@ server/static/*.JPG
 ../../../Videos/
 EOF
 
-# Add .gitignore
+# Add the new .gitignore
 git add .gitignore
-git commit -m "Add .gitignore to exclude personal files"
+git commit -m "Update .gitignore - include package-lock.json"

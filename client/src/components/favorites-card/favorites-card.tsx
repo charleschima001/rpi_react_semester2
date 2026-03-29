@@ -10,11 +10,29 @@ type FavoritesCardProps = {
     isPremium: boolean;
     previewImage: string;
     rating: number;
+    isFavorite: boolean;
+    onFavoriteClick: (offerId: string, currentStatus: boolean) => void;
 }
 
-function FavoritesCard({ id, title, type, price, previewImage, isPremium, rating }: FavoritesCardProps) {
+function FavoritesCard({ 
+    id, 
+    title, 
+    type, 
+    price, 
+    previewImage, 
+    isPremium, 
+    rating, 
+    isFavorite,
+    onFavoriteClick 
+}: FavoritesCardProps) {
     const ratingPercent = Math.round(rating * 20);
-    const [, setOfferId] = useState('');
+
+    const handleBookmarkClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onFavoriteClick(id, isFavorite);
+    };
+
     return (
         <article className="favorites__card place-card">
             {isPremium && (
@@ -33,11 +51,17 @@ function FavoritesCard({ id, title, type, price, previewImage, isPremium, rating
                         <b className="place-card__price-value">&euro;{price}</b>
                         <span className="place-card__price-text">&#47;&nbsp;night</span>
                     </div>
-                    <button className="place-card__bookmark-button place-card__bookmark-button--active button" type="button">
+                    <button 
+                        className={`place-card__bookmark-button button ${isFavorite ? 'place-card__bookmark-button--active' : ''}`} 
+                        type="button"
+                        onClick={handleBookmarkClick}
+                    >
                         <svg className="place-card__bookmark-icon" width="18" height="19">
                             <use href="#icon-bookmark"></use>
                         </svg>
-                        <span className="visually-hidden">In bookmarks</span>
+                        <span className="visually-hidden">
+                            {isFavorite ? 'In bookmarks' : 'To bookmarks'}
+                        </span>
                     </button>
                 </div>
                 <div className="place-card__rating rating">
@@ -47,7 +71,7 @@ function FavoritesCard({ id, title, type, price, previewImage, isPremium, rating
                     </div>
                 </div>
                 <h2 className="place-card__name">
-                    <a href={`/offer/${id}`}>{title}</a>
+                    <Link to={`${AppRoute.Offer}/${id}`}>{title}</Link>
                 </h2>
                 <p className="place-card__type">{type}</p>
             </div>
@@ -55,4 +79,4 @@ function FavoritesCard({ id, title, type, price, previewImage, isPremium, rating
     );
 }
 
-export { FavoritesCard }
+export { FavoritesCard };

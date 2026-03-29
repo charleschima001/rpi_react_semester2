@@ -3,17 +3,16 @@ import { FavoritesPage } from "../../pages/favorites-page/favorites-page";
 import { LoginPage } from "../../pages/login-page/login-page";
 import { OfferPage } from "../../pages/offer-page/offer-page";
 import { NotFoundPage } from "../../pages/not-found-page/not-found-page";
+import { ProfilePage } from "../../pages/profile-page/profile-page";
 import { BrowserRouter } from 'react-router-dom';
 import { Route } from 'react-router-dom';
 import { Routes } from 'react-router-dom';
-import { Navigate } from 'react-router-dom'; // Add this import
+import { Navigate } from 'react-router-dom';
 import { PrivateRoute } from "../private-route/private-route";
 import { AppRoute } from "../../const";
 import { JSX, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../hooks";
 import { checkAuthAction } from "../../store/api-actions";
-import { ProfilePage } from '../../pages/profile-page/profile-page';
-
 
 function App(): JSX.Element {
     const dispatch = useAppDispatch();
@@ -26,10 +25,10 @@ function App(): JSX.Element {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/profile" element={<ProfilePage />} />
                 <Route path={AppRoute.Main} element={<MainPage />} />
                 <Route path={AppRoute.Login} element={<LoginPage />} />
                 <Route path={`${AppRoute.Offer}/:id`} element={<OfferPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
                 <Route
                     path={AppRoute.Favorites}
                     element={

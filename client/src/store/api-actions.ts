@@ -27,7 +27,6 @@ export const fetchOffersAction = createAsyncThunk<void, undefined, {
   },
 );
 
-// NEW: Fetch single offer by ID
 export const fetchOfferAction = createAsyncThunk<Offer, string, {
   dispatch: AppDispatch;
   state: State;
@@ -88,9 +87,7 @@ export const checkAuthAction = createAsyncThunk<void, undefined, {
     try {
       const response = await api.get(APIRoute.Login);
       const data = response.data;
-      
       dispatch(requireAuthorization(AuthorizationStatus.Auth));
-      
       if (data.user) {
         dispatch(setUser(data.user));
       } else {
@@ -114,19 +111,15 @@ export const loginAction = createAsyncThunk<UserData, AuthData, {
     try {
       const response = await api.post(APIRoute.Login, { email, password });
       const data = response.data;
-      
       saveToken(data.token);
       dispatch(requireAuthorization(AuthorizationStatus.Auth));
-      
       if (data.user) {
         dispatch(setUser(data.user));
       } else {
         dispatch(setUser(data));
       }
-      
       return data;
     } catch (error) {
-
       if (error && typeof error === 'object' && 'response' in error) {
         const err = error as { response?: { status?: number } };
         if (err.response?.status === 401) {
@@ -149,6 +142,7 @@ export const logoutAction = createAsyncThunk<void, undefined, {
     dropToken();
     dispatch(requireAuthorization(AuthorizationStatus.NoAuth));
     dispatch(setUser(null));
+    dispatch({ type: 'favorites/clear' });
   },
 );
 

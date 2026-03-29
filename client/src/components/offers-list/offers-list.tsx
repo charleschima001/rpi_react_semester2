@@ -1,8 +1,9 @@
 import { JSX, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAppDispatch } from '../../hooks';
+import { Link, useNavigate } from 'react-router-dom'; // Add useNavigate
+import { useAppSelector, useAppDispatch } from '../../hooks'; // Add useAppSelector
 import { Offer } from '../../types/offer';
 import { toggleFavoriteAction } from '../../store/api-actions';
+import { AppRoute } from '../../const'; // Add AppRoute
 
 type OffersListProps = {
   offers: Offer[];
@@ -10,6 +11,8 @@ type OffersListProps = {
 
 function OffersList({ offers }: OffersListProps): JSX.Element {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate(); // Add navigate
+  const user = useAppSelector((state) => state.user); // Get user from Redux
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   if (!offers || offers.length === 0) {
@@ -33,9 +36,18 @@ function OffersList({ offers }: OffersListProps): JSX.Element {
       img.src = 'https://via.placeholder.com/260x200?text=No+Image';
     }
   };
+
+  // Handle favorite click with authentication check
   const handleFavoriteClick = (e: React.MouseEvent, offerId: string, currentStatus: boolean) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if user is logged in
+    if (!user) {
+      navigate(AppRoute.Login);
+      return;
+    }
+    
     const newStatus = currentStatus ? 0 : 1;
     dispatch(toggleFavoriteAction({ offerId, status: newStatus }));
   };

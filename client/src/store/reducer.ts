@@ -14,7 +14,6 @@ type InitialState = {
   error: string | null;
   reviews: Record<string, Review[]>;
   user: UserData | null;
-  // New state for single offer
   currentOffer: Offer | null;
   offerLoadingStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
 };
@@ -27,24 +26,20 @@ const initialState: InitialState = {
   error: null,
   reviews: {},
   user: null,
-  // Initialize new state
   currentOffer: null,
   offerLoadingStatus: 'idle',
 };
 
 export const reducer = createReducer(initialState, (builder) => {
   builder
-    // City selection
     .addCase(changeCity, (state, action) => {
       state.city = action.payload;
     })
 
-    // Offers list
     .addCase(offersCityList, (state, action) => {
       state.offers = action.payload;
     })
 
-    // Single offer
     .addCase(fetchOfferAction.pending, (state) => {
       state.offerLoadingStatus = 'loading';
       state.currentOffer = null;
@@ -58,7 +53,6 @@ export const reducer = createReducer(initialState, (builder) => {
       state.currentOffer = null;
     })
 
-    // Authorization
     .addCase(requireAuthorization, (state, action) => {
       state.authorizationStatus = action.payload;
     })
@@ -66,37 +60,32 @@ export const reducer = createReducer(initialState, (builder) => {
       state.user = action.payload;
     })
 
-    // Loading state
     .addCase(setOffersDataLoadingStatus, (state, action) => {
       state.isOffersDataLoading = action.payload;
     })
 
-    // Error handling
     .addCase(setError, (state, action) => {
       state.error = action.payload;
     })
 
-    // Favorites
     .addCase(toggleFavoriteAction.fulfilled, (state, action) => {
       const { offerId, status } = action.meta.arg;
       
-      // Update in offers array
       const offer = state.offers.find(o => o.id === offerId);
       if (offer) {
         offer.isFavorite = status === 1;
       }
       
-      // Update in currentOffer if it matches
       if (state.currentOffer && state.currentOffer.id === offerId) {
         state.currentOffer.isFavorite = status === 1;
       }
     })
 
-    // Reviews
     .addCase(fetchReviewsAction.fulfilled, (state, action) => {
       const offerId = action.meta.arg;
       state.reviews[offerId] = action.payload;
     })
+    
     .addCase(postReviewAction.fulfilled, (state, action) => {
       const { offerId } = action.meta.arg;
       if (state.reviews[offerId]) {
@@ -104,5 +93,12 @@ export const reducer = createReducer(initialState, (builder) => {
       } else {
         state.reviews[offerId] = [action.payload];
       }
+    })
+    
+    .addCase('favorites/clear', (state) => {
+      state.offers = state.offers.map(offer => ({
+        ...offer,
+        isFavorite: false
+      }));
     });
 });
